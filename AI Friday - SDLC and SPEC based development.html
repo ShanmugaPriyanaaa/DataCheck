@@ -1,0 +1,476 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AI Friday Video Storyboard – Auto-Play Demo</title>
+  <style>
+    :root{
+      --bg:#020815;
+      --bg2:#051427;
+      --card:#071a31;
+      --card2:#0b294d;
+      --accent:#6fd3ff;
+      --accent2:#8c7dff;
+      --text:#eaf7ff;
+      --muted:#9ecbf0;
+      --line:rgba(127,196,255,.20);
+      --ok:#3bd17f;
+      --warn:#ffd166;
+      --danger:#ff7b7b;
+      --shadow:0 18px 38px rgba(0,0,0,.35);
+    }
+    *{box-sizing:border-box}
+    html,body{margin:0;padding:0;background:linear-gradient(180deg,var(--bg),#041225 40%,var(--bg2));color:var(--text);font-family:Segoe UI,Arial,sans-serif;scroll-behavior:smooth}
+    a{color:var(--accent)}
+    .hero{position:sticky;top:0;z-index:50;backdrop-filter: blur(14px);background:linear-gradient(135deg,rgba(3,16,36,.95),rgba(5,38,74,.92),rgba(13,90,167,.88));padding:22px 5vw 18px;border-bottom:1px solid var(--line);box-shadow:0 12px 30px rgba(0,0,0,.25)}
+    .hero-grid{display:grid;grid-template-columns:1.2fr .8fr;gap:24px;align-items:center;max-width:1400px;margin:auto}
+    .eyebrow{display:inline-block;padding:8px 14px;border:1px solid rgba(175,220,255,.28);border-radius:999px;background:rgba(255,255,255,.06);font-size:12px;font-weight:800;letter-spacing:.08em;text-transform:uppercase}
+    h1{margin:14px 0 8px;font-size:clamp(28px,4vw,54px);line-height:1.04}
+    .subtitle{font-size:clamp(15px,1.4vw,20px);color:#dbeefe;max-width:760px;margin:0}
+    .controls{display:flex;flex-wrap:wrap;gap:10px;justify-content:flex-end}
+    button{appearance:none;border:1px solid rgba(175,220,255,.25);background:linear-gradient(180deg,rgba(111,211,255,.16),rgba(111,211,255,.08));color:var(--text);padding:12px 16px;border-radius:14px;font-weight:700;cursor:pointer;box-shadow:var(--shadow)}
+    button:hover{transform:translateY(-1px)}
+    button.primary{background:linear-gradient(135deg,rgba(111,211,255,.22),rgba(140,125,255,.20));border-color:rgba(175,220,255,.38)}
+    button.warn{background:linear-gradient(135deg,rgba(255,209,102,.20),rgba(255,140,102,.16));border-color:rgba(255,209,102,.35)}
+    .small-note{font-size:12px;color:#d6e9ff;opacity:.86;max-width:520px;text-align:right}
+    .shell{display:grid;grid-template-columns:300px 1fr;gap:24px;max-width:1450px;margin:28px auto;padding:0 3vw 40px}
+    .nav{position:sticky;top:165px;align-self:start;background:linear-gradient(180deg,rgba(7,26,49,.92),rgba(11,41,77,.92));border:1px solid var(--line);border-radius:24px;padding:18px;box-shadow:var(--shadow)}
+    .nav h3{margin:0 0 14px;font-size:18px}
+    .nav .status{display:flex;align-items:center;gap:10px;margin:8px 0 18px;padding:12px;border-radius:16px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08)}
+    .dot{width:10px;height:10px;border-radius:50%;background:var(--warn);box-shadow:0 0 0 6px rgba(255,209,102,.12)}
+    .dot.playing{background:var(--ok);box-shadow:0 0 0 6px rgba(59,209,127,.12)}
+    .nav a{display:block;text-decoration:none;padding:10px 12px;border-radius:14px;color:var(--text);margin:6px 0;background:linear-gradient(180deg,rgba(255,255,255,.03),rgba(255,255,255,.02));border:1px solid rgba(255,255,255,.07);font-size:14px}
+    .nav a.active{background:linear-gradient(135deg,rgba(111,211,255,.17),rgba(140,125,255,.16));border-color:rgba(175,220,255,.26)}
+    .main{display:grid;gap:20px}
+    .card{position:relative;overflow:hidden;background:linear-gradient(180deg,var(--card),var(--card2));border:1px solid var(--line);border-radius:28px;padding:24px;box-shadow:var(--shadow)}
+    .card.active{outline:2px solid rgba(111,211,255,.45);box-shadow:0 0 0 1px rgba(111,211,255,.3), var(--shadow)}
+    .scene-head{display:flex;justify-content:space-between;gap:14px;align-items:flex-start;flex-wrap:wrap}
+    .scene-kicker{display:inline-block;padding:6px 10px;border-radius:999px;background:rgba(111,211,255,.10);border:1px solid rgba(111,211,255,.24);font-size:12px;font-weight:800}
+    .scene-title{font-size:clamp(22px,2vw,32px);margin:10px 0 6px;color:var(--text)}
+    .scene-time{font-size:14px;color:var(--muted)}
+    .grid{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin-top:18px}
+    .box{background:rgba(255,255,255,.045);border:1px solid rgba(255,255,255,.08);border-radius:18px;padding:16px}
+    .label{font-weight:800;color:#bde8ff;margin-bottom:8px;font-size:13px;text-transform:uppercase;letter-spacing:.06em}
+    .voice{margin-top:18px;background:#021226;border-left:4px solid var(--accent);padding:18px;border-radius:14px;line-height:1.7;font-size:18px}
+    .voice strong{color:#fff}
+    .meta{display:flex;gap:10px;flex-wrap:wrap;margin-top:14px}
+    .chip{font-size:12px;padding:8px 10px;border-radius:999px;border:1px solid rgba(255,255,255,.1);background:rgba(255,255,255,.04);color:#d9edff}
+    .progress-wrap{margin-top:12px;padding:12px;border-radius:16px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.08)}
+    .progress-label{display:flex;justify-content:space-between;font-size:12px;color:#d9edff;margin-bottom:8px}
+    .bar{height:10px;border-radius:999px;background:rgba(255,255,255,.08);overflow:hidden}
+    .bar > span{display:block;height:100%;width:0;background:linear-gradient(90deg,var(--accent),var(--accent2));transition:width .25s linear}
+    .footer{max-width:1450px;margin:0 auto 40px;padding:0 3vw;color:#b7d6f1;font-size:14px}
+    .hero::after{content:'';position:absolute;inset:auto -10% -40% auto;width:42vw;height:42vw;border-radius:50%;background:radial-gradient(circle,rgba(111,211,255,.18),transparent 58%);pointer-events:none}
+    @media (max-width: 1050px){
+      .hero-grid,.shell{grid-template-columns:1fr}
+      .controls{justify-content:flex-start}
+      .small-note{text-align:left}
+      .nav{position:relative;top:auto}
+    }
+    @media (max-width: 760px){
+      .grid{grid-template-columns:1fr}
+      .voice{font-size:16px}
+    }
+  </style>
+</head>
+<body>
+  <header class="hero">
+    <div class="hero-grid">
+      <div>
+        <span class="eyebrow">AI Friday • ChennAI</span>
+        <h1>AI Friday – Video Storyboard<br/>Auto-Play Voice Demo</h1>
+        <p class="subtitle">Executive storyboard for <strong>SPEC Driven Development for SDLC using AI</strong>. Includes synchronized scene flow, voiceover script, auto-advance playback, and browser text-to-speech narration.</p>
+      </div>
+      <div>
+        <div class="controls">
+          <button class="primary" id="startBtn">▶ Start Demo</button>
+          <button id="pauseBtn">⏸ Pause</button>
+          <button id="resumeBtn">⏯ Resume</button>
+          <button class="warn" id="restartBtn">↺ Restart</button>
+        </div>
+        <p class="small-note">Note: most browsers restrict true autoplay audio. This demo <strong>tries to autoplay on open</strong>; if voice is blocked, click <strong>Start Demo</strong> once to enable browser speech.</p>
+      </div>
+    </div>
+  </header>
+
+  <div class="shell">
+    <aside class="nav">
+      <div class="status"><span class="dot" id="statusDot"></span><div><strong id="statusText">Ready</strong><div style="font-size:12px;color:#b7d6f1">Voice + scene sync controls</div></div></div>
+      <h3>Storyboard Navigation</h3>
+      <div id="navLinks"></div>
+      <div class="progress-wrap">
+        <div class="progress-label"><span>Overall Progress</span><span id="overallPct">0%</span></div>
+        <div class="bar"><span id="overallBar"></span></div>
+      </div>
+    </aside>
+
+    <main class="main" id="sceneContainer"></main>
+  </div>
+
+  <div class="footer">
+    <p><strong>How this demo works:</strong> each scene is highlighted, spoken using your browser’s text-to-speech, and auto-advances using timed durations. You can pause, resume, jump to a scene, or restart from the beginning. Visual styling follows the same dark executive standard as the AI Friday workbook.</p>
+  </div>
+
+<script>
+const scenes = [
+  {
+    id:'scene-1',
+    title:'Opening Impact',
+    time:'0:00 – 0:20',
+    duration:20,
+    visual:'Futuristic digital grid, glowing network lines, and AI / SDLC icons establishing the executive technology tone.',
+    text:'AI-powered delivery • Specification-driven execution • Quality-defined success',
+    voice:'Welcome to AI Friday. This is not just another software exercise. This is your entry into a new way of building — where AI accelerates delivery, specifications drive execution, and quality defines success.',
+    cues:'Calm, strong, executive opening. Slow down slightly on “quality defines success.”'
+  },
+  {
+    id:'scene-2',
+    title:'Warrior Mindset',
+    time:'0:20 – 0:45',
+    duration:25,
+    visual:'A participant silhouette evolves into a digital AI warrior with layered roles: analyst, architect, developer, tester, AI orchestrator.',
+    text:'Think deeper • Decompose smarter • Guide AI better • Deliver stronger',
+    voice:'To succeed here, you cannot think like a task executor. You must think like an AI warrior. Someone who understands the problem, decomposes it intelligently, guides AI with precision, and delivers with discipline.',
+    cues:'Firm emphasis on “AI warrior” and “delivers with discipline.”'
+  },
+  {
+    id:'scene-3',
+    title:'Understanding the Problem',
+    time:'0:45 – 1:10',
+    duration:25,
+    visual:'Fragmented problem blocks transform into a structured model with categories for users, workflow, data, exceptions, and outcomes.',
+    text:'Users • Workflow • Data • Exceptions • Outcomes',
+    voice:'The first victory is not coding. It is understanding. Break the problem into users, workflows, data, exceptions, and outcomes. The clearer your understanding, the stronger your delivery.',
+    cues:'Pause after “not coding.” Make “It is understanding” slightly more deliberate.'
+  },
+  {
+    id:'scene-4',
+    title:'Decomposition',
+    time:'1:10 – 1:35',
+    duration:25,
+    visual:'A single problem statement splits into structured deliverable modules flowing across the screen.',
+    text:'Requirements • SPECS • Architecture • Data • Code • Testing • Traceability',
+    voice:'Winning teams do not attack the problem in one piece. They break it down into structured deliverables — requirements, specifications, architecture, data, code, testing, traceability, and AI-led quality review.',
+    cues:'Keep the list rhythmic and crisp.'
+  },
+  {
+    id:'scene-5',
+    title:'Specification Flow',
+    time:'1:35 – 2:00',
+    duration:25,
+    visual:'User story becomes structured spec, then YAML, then hierarchical file tree, then code and application preview.',
+    text:'Story → Spec → DSL → Code',
+    voice:'Do not jump straight to implementation. Start with specifications. Story becomes structure. Structure becomes specification. Specification becomes code-ready execution.',
+    cues:'Deliver as a sequence. Slight pause after each transformation.'
+  },
+  {
+    id:'scene-6',
+    title:'AI Across SDLC',
+    time:'2:00 – 2:30',
+    duration:30,
+    visual:'A circular SDLC wheel lights up as an AI pulse moves through analysis, design, development, testing, documentation, and review.',
+    text:'AI in Analysis • Design • Development • Testing • Documentation • Review',
+    voice:'AI is not just for code generation. It must work across the entire lifecycle — requirements, design, development, testing, documentation, and review. The strongest teams embed AI everywhere, not as an afterthought.',
+    cues:'Emphasize “entire lifecycle” and “everywhere.”'
+  },
+  {
+    id:'scene-7',
+    title:'Deliverable Quality',
+    time:'2:30 – 3:00',
+    duration:30,
+    visual:'Premium deliverables fan out as polished cards: requirements document, diagrams, data model, test assets, traceability report, AI quality report.',
+    text:'Complete • Professional • Production-level',
+    voice:'This exercise is not judged only by working software. It is judged by completeness, professionalism, and production-level quality of your deliverables. Excellence must be visible.',
+    cues:'Strong emphasis on “production-level quality.”'
+  },
+  {
+    id:'scene-8',
+    title:'Traceability',
+    time:'3:00 – 3:20',
+    duration:20,
+    visual:'A chain links requirement to specification to design to code to testing to final output.',
+    text:'Requirement → Spec → Code → Test → Output',
+    voice:'The best submissions show traceability. Every output must connect logically to the next. Clear lineage builds confidence, and confidence builds credibility.',
+    cues:'Read the chain more slowly. Land firmly on credibility.'
+  },
+  {
+    id:'scene-9',
+    title:'Prompt Discipline',
+    time:'3:20 – 3:40',
+    duration:20,
+    visual:'Prompt versions evolve from vague to precise, producing visibly stronger outputs.',
+    text:'Capture • Refine • Reuse',
+    voice:'A top team does not just use AI. It uses AI intentionally. Capture your prompts. Refine them. Reuse them. Precision in prompting leads to precision in outcomes.',
+    cues:'Short, sharp delivery for the three action words.'
+  },
+  {
+    id:'scene-10',
+    title:'Discipline & Execution',
+    time:'3:40 – 4:05',
+    duration:25,
+    visual:'An engineering checklist lights up: standards, integration, test coverage, documentation, user experience.',
+    text:'Standards • Testing • Integration • Documentation • UX',
+    voice:'Strong teams apply engineering discipline. Follow standards. Ensure integration. Build comprehensive testing. Maintain clear documentation. Discipline converts effort into quality.',
+    cues:'Measured and authoritative. Slight pause before the final sentence.'
+  },
+  {
+    id:'scene-11',
+    title:'Innovation & AI Agents',
+    time:'4:05 – 4:25',
+    duration:20,
+    visual:'A custom AI agent interface assembles itself and generates a code quality score and report.',
+    text:'Build Your Own AI Agent • Innovation Matters',
+    voice:'There is added advantage in building your own AI capability. If your team creates its own AI agent or uses AI creatively, you move beyond participation into differentiation.',
+    cues:'Emphasize “your own AI capability” and “differentiation.”'
+  },
+  {
+    id:'scene-12',
+    title:'Final Message',
+    time:'4:25 – 5:00',
+    duration:35,
+    visual:'All deliverables align into one unified system view. A final AI pulse runs across the architecture before the closing message fills the screen.',
+    text:'Think with clarity • Structure with discipline • Use AI with intent • Deliver with excellence',
+    voice:'This is your opportunity to demonstrate how modern software teams should operate. Think with clarity. Structure with discipline. Use AI with intent. Deliver with excellence. Use AI not just to build faster, but to build better.',
+    cues:'Deliberate final cadence. Strong close on “build better.”'
+  }
+];
+
+const sceneContainer = document.getElementById('sceneContainer');
+const navLinks = document.getElementById('navLinks');
+const overallBar = document.getElementById('overallBar');
+const overallPct = document.getElementById('overallPct');
+const statusDot = document.getElementById('statusDot');
+const statusText = document.getElementById('statusText');
+const startBtn = document.getElementById('startBtn');
+const pauseBtn = document.getElementById('pauseBtn');
+const resumeBtn = document.getElementById('resumeBtn');
+const restartBtn = document.getElementById('restartBtn');
+
+let currentIndex = 0;
+let playing = false;
+let paused = false;
+let elapsed = 0;
+let remaining = 0;
+let sceneStart = 0;
+let timer = null;
+let progressTimer = null;
+let waitingToResume = false;
+let autoPlayAttempted = false;
+let voicesLoaded = false;
+let selectedVoice = null;
+
+function render(){
+  scenes.forEach((s, idx)=>{
+    const card = document.createElement('section');
+    card.className = 'card';
+    card.id = s.id;
+    card.innerHTML = `
+      <div class="scene-head">
+        <div>
+          <span class="scene-kicker">Scene ${idx+1}</span>
+          <div class="scene-title">${s.title}</div>
+          <div class="scene-time">${s.time}</div>
+        </div>
+        <div class="meta">
+          <span class="chip">Duration: ${s.duration}s</span>
+          <span class="chip">Voice-synced</span>
+          <span class="chip">Executive storyboard</span>
+        </div>
+      </div>
+      <div class="grid">
+        <div class="box"><div class="label">Visual</div>${s.visual}</div>
+        <div class="box"><div class="label">On-Screen Text</div>${s.text}</div>
+      </div>
+      <div class="voice"><strong>Voiceover:</strong><br/>${s.voice}</div>
+      <div class="meta"><span class="chip"><strong>Delivery cue:</strong> ${s.cues}</span></div>
+      <div class="progress-wrap">
+        <div class="progress-label"><span>Scene Progress</span><span id="pct-${idx}">0%</span></div>
+        <div class="bar"><span id="bar-${idx}"></span></div>
+      </div>`;
+    sceneContainer.appendChild(card);
+
+    const link = document.createElement('a');
+    link.href = `#${s.id}`;
+    link.textContent = `Scene ${idx+1} – ${s.title}`;
+    link.addEventListener('click',(e)=>{
+      e.preventDefault();
+      jumpToScene(idx, true);
+    });
+    navLinks.appendChild(link);
+  });
+}
+
+function setStatus(text, state='ready'){
+  statusText.textContent = text;
+  statusDot.classList.toggle('playing', state==='playing');
+}
+
+function updateOverall(){
+  const total = scenes.reduce((a,s)=>a+s.duration,0);
+  const doneBefore = scenes.slice(0,currentIndex).reduce((a,s)=>a+s.duration,0);
+  const pct = Math.min(100, Math.round(((doneBefore+elapsed)/total)*100));
+  overallBar.style.width = pct + '%';
+  overallPct.textContent = pct + '%';
+}
+
+function highlightScene(idx){
+  document.querySelectorAll('.card').forEach((c,i)=>c.classList.toggle('active', i===idx));
+  document.querySelectorAll('.nav a').forEach((a,i)=>a.classList.toggle('active', i===idx));
+  const el = document.getElementById(scenes[idx].id);
+  if(el){ el.scrollIntoView({behavior:'smooth', block:'center'}); }
+}
+
+function resetSceneBars(){
+  scenes.forEach((s, idx)=>{
+    const bar = document.getElementById('bar-'+idx);
+    const pct = document.getElementById('pct-'+idx);
+    if(bar) bar.style.width = '0%';
+    if(pct) pct.textContent = '0%';
+  });
+}
+
+function updateSceneBar(idx, pct){
+  const bar = document.getElementById('bar-'+idx);
+  const pctEl = document.getElementById('pct-'+idx);
+  if(bar) bar.style.width = Math.min(100,pct) + '%';
+  if(pctEl) pctEl.textContent = Math.min(100,Math.round(pct)) + '%';
+}
+
+function pickVoice(){
+  const voices = speechSynthesis.getVoices();
+  if(!voices || !voices.length) return null;
+  const preferred = voices.find(v => /en\-|English/i.test(v.lang) && /Google|Microsoft|Samantha|Daniel|Aria|Jenny/i.test(v.name))
+                 || voices.find(v => /en\-|English/i.test(v.lang))
+                 || voices[0];
+  return preferred;
+}
+
+function speak(text){
+  if(!('speechSynthesis' in window)) return;
+  speechSynthesis.cancel();
+  const utter = new SpeechSynthesisUtterance(text);
+  if(selectedVoice) utter.voice = selectedVoice;
+  utter.rate = 1.0;
+  utter.pitch = 1.0;
+  utter.volume = 1;
+  utter.onend = ()=>{};
+  speechSynthesis.speak(utter);
+}
+
+function clearTimers(){
+  if(timer){ clearTimeout(timer); timer = null; }
+  if(progressTimer){ clearInterval(progressTimer); progressTimer = null; }
+}
+
+function playScene(idx){
+  clearTimers();
+  if(idx >= scenes.length){
+    playing = false; paused = false; currentIndex = scenes.length - 1; elapsed = scenes[currentIndex].duration; updateOverall();
+    setStatus('Complete', 'ready');
+    return;
+  }
+  currentIndex = idx;
+  elapsed = 0;
+  remaining = scenes[idx].duration;
+  playing = true;
+  paused = false;
+  setStatus(`Playing – Scene ${idx+1}`, 'playing');
+  highlightScene(idx);
+  speak(scenes[idx].voice);
+  sceneStart = performance.now();
+  updateSceneBar(idx, 0);
+  progressTimer = setInterval(()=>{
+    if(paused) return;
+    elapsed = Math.min(scenes[idx].duration, (performance.now() - sceneStart)/1000);
+    updateSceneBar(idx, (elapsed / scenes[idx].duration) * 100);
+    updateOverall();
+  }, 100);
+  timer = setTimeout(()=>{
+    updateSceneBar(idx,100);
+    playScene(idx+1);
+  }, scenes[idx].duration * 1000);
+}
+
+function pausePlayback(){
+  if(!playing || paused) return;
+  paused = true;
+  remaining = Math.max(0, scenes[currentIndex].duration - elapsed);
+  clearTimers();
+  if('speechSynthesis' in window) speechSynthesis.pause();
+  setStatus(`Paused – Scene ${currentIndex+1}`, 'ready');
+}
+
+function resumePlayback(){
+  if(!playing || !paused) return;
+  paused = false;
+  setStatus(`Playing – Scene ${currentIndex+1}`, 'playing');
+  if('speechSynthesis' in window) speechSynthesis.resume();
+  sceneStart = performance.now() - (elapsed * 1000);
+  progressTimer = setInterval(()=>{
+    if(paused) return;
+    elapsed = Math.min(scenes[currentIndex].duration, (performance.now() - sceneStart)/1000);
+    updateSceneBar(currentIndex, (elapsed / scenes[currentIndex].duration) * 100);
+    updateOverall();
+  }, 100);
+  timer = setTimeout(()=>{
+    updateSceneBar(currentIndex,100);
+    playScene(currentIndex+1);
+  }, remaining * 1000);
+}
+
+function restartPlayback(){
+  clearTimers();
+  if('speechSynthesis' in window) speechSynthesis.cancel();
+  resetSceneBars();
+  currentIndex = 0; elapsed = 0; remaining = 0; playing = false; paused = false;
+  updateOverall();
+  startPlayback();
+}
+
+function jumpToScene(idx, autoplay=true){
+  clearTimers();
+  if('speechSynthesis' in window) speechSynthesis.cancel();
+  resetSceneBars();
+  currentIndex = idx;
+  elapsed = 0;
+  updateOverall();
+  highlightScene(idx);
+  if(autoplay){ playScene(idx); }
+}
+
+function startPlayback(){
+  selectedVoice = pickVoice();
+  playScene(currentIndex || 0);
+}
+
+function attemptAutoplay(){
+  if(autoPlayAttempted) return;
+  autoPlayAttempted = true;
+  try {
+    startPlayback();
+  } catch(e){
+    setStatus('Ready – click Start Demo', 'ready');
+  }
+}
+
+render();
+setStatus('Ready', 'ready');
+updateOverall();
+
+startBtn.addEventListener('click', ()=>startPlayback());
+pauseBtn.addEventListener('click', ()=>pausePlayback());
+resumeBtn.addEventListener('click', ()=>resumePlayback());
+restartBtn.addEventListener('click', ()=>restartPlayback());
+
+if('speechSynthesis' in window){
+  speechSynthesis.onvoiceschanged = ()=>{ selectedVoice = pickVoice(); voicesLoaded = true; };
+  selectedVoice = pickVoice();
+}
+
+window.addEventListener('load', ()=>{
+  setTimeout(attemptAutoplay, 500);
+});
+</script>
+</body>
+</html>
